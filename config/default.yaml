@@ -42,6 +42,67 @@ agent:
       ISSUE:
       {{problem_statement}}
 
+      IMPORTANT:
+  
+      Create a new branch named "fix/issue{issue_number}" (if not created yet), publish it and move to that branch. If the branch is already created, please move to that branch.   
+      Please, solve the problem by changing the code in that branch, commit and push it to that branch, and create a PR.
+            
+      Only if you have any questions or need any clarifications - please, write a comment in the issue.
+      To do so you can use this function:
+            
+      ```python
+          import re
+          import json
+          import urllib.request
+          import urllib.error
+
+          def leave_comment(issue_url, comment_text):
+              github_token = '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'
+              pattern = r"https://github\.com/([^/]+)/([^/]+)/issues/(\d+)"
+              match = re.match(pattern, issue_url)
+              if not match:
+                  raise ValueError
+              
+              owner, repo, issue_number = match.groups()
+              api_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments"
+              headers = {
+                  "Authorization": f"token {github_token}",
+                  "Accept": "application/vnd.github+json",
+                  "Content-Type": "application/json"
+              }
+              
+              data = {"body": comment_text}
+              json_data = json.dumps(data).encode("utf-8")
+              
+              req = urllib.request.Request(api_url, data=json_data, headers=headers, method="POST")
+              
+              try:
+                  with urllib.request.urlopen(req) as response:
+                      status = response.getcode()
+                      resp_data = response.read().decode("utf-8")
+                      if status == 201:
+                          print("Comment posted successfully!")
+                          return json.loads(resp_data)
+                      else:
+                          raise Exception
+              except urllib.error.HTTPError as e:
+                  error_message = e.read().decode("utf-8")
+                  raise Exception
+      ```
+
+      Example of usage:
+
+      ```python
+          issue_url = {issue_url}
+          comment_text = "This is a test comment."
+          try:
+              response_data = leave_comment(issue_url, comment_text)
+              print(response_data)
+          except Exception as e:
+              print("Failed to post comment:", e)
+      ```
+
+
       INSTRUCTIONS:
       Now, you're going to solve this issue on your own. Your terminal session has started and you're in the repository's root directory. You can use any bash commands or the special interface to help you. Edit all the files you need to and run any checks or tests that you want.
       Remember, YOU SHOULD ALWAYS INCLUDE EXACTLY ONE TOOL CALL/FUNCTION CALL PER RESPONSE.

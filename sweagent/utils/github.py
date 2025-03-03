@@ -107,7 +107,7 @@ def _get_problem_statement_from_github_issue(
     comment = api.issues.list_comments(owner, repo, issue_number)  # type: ignore
     title = issue.title if issue.title else ""
     body = issue.body if issue.body else ""
-    return f"{title}\n{body}\n{''.join([c.body for c in comment])}"
+    return f"{title}\nISSUE NUMBER: {issue_number}\n{body}\n{''.join([c.body for c in comment])}"
 
 
 def _get_associated_commit_urls(org: str, repo: str, issue_number: str, *, token: str = "") -> list[str]:
