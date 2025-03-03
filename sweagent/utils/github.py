@@ -88,15 +88,26 @@ def _get_gh_issue_data(issue_url: str, *, token: str = ""):
     return api.issues.get(owner, repo, issue_number)  # type: ignore
 
 
+# def _get_problem_statement_from_github_issue(
+#     owner: str, repo: str, issue_number: str, *, token: str | None = ""
+# ) -> str:
+#     """Return problem statement from github issue"""
+#     api = GhApi(token=token)
+#     issue = api.issues.get(owner, repo, issue_number)  # type: ignore
+#     title = issue.title if issue.title else ""
+#     body = issue.body if issue.body else ""
+#     return f"{title}\n{body}\n"
+
 def _get_problem_statement_from_github_issue(
     owner: str, repo: str, issue_number: str, *, token: str | None = ""
 ) -> str:
     """Return problem statement from github issue"""
     api = GhApi(token=token)
     issue = api.issues.get(owner, repo, issue_number)  # type: ignore
+    comment = api.issues.list_comments(owner, repo, issue_number)  # type: ignore
     title = issue.title if issue.title else ""
     body = issue.body if issue.body else ""
-    return f"{title}\n{body}\n"
+    return f"{title}\n{body}\n{''.join([c.body for c in comment])}"
 
 
 def _get_associated_commit_urls(org: str, repo: str, issue_number: str, *, token: str = "") -> list[str]:
