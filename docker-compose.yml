@@ -1,0 +1,16 @@
+
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ./api
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./trajectories:/app/trajectories
+    depends_on:
+      - agent
+
+  agent:
+    image: ghcr.io/itayg2341/swe-agent:main
