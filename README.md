@@ -12,6 +12,9 @@ Follow these steps:
 11. pip install flask
 12. python app.py
 
+13. Open the SWE-agent dir with vscode and make sure the Docker is running.
+14. add .env file and change the dir name "trajectories_example" to "trajectories".
+
 There are 2 routes:
 1. GET /issue/<issue_url>
   This one is for a single run on a ticket.
