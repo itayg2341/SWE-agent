@@ -1,3 +1,29 @@
+Follow these steps:
+1. Open wsl terminal and cd to ~ .
+2. git clone git@github.com:itayg2341/SWE-agent.git
+3. cd SWE-agent
+4. python3.11 -m venv venv (must python 3.11)
+5. source venv/bin/activate
+6. python -m pip install --upgrade pip && pip install --editable .
+7. deactivate
+8. cd api
+9. python3.11 -m venv venv (must python 3.11)
+10. source venv/bin/activate
+11. pip install flask
+12. python app.py
+
+There are 2 routes:
+1. GET /issue/<issue_url>
+  This one is for a single run on a ticket.
+  It can be used manually or by the AI-town.
+2. POST /webhook
+   You must publish the url to use this. You need to set this adress
+   in the webhooks of a given repo in GitHub.
+
+
+
+
+
 <p align="center">
   <a href="https://swe-agent.com/latest/">
     <img src="assets/swe-agent-banner.png" alt="swe-agent.com" style="height: 12em" />
