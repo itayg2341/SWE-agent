@@ -1,16 +1,8 @@
 Follow these steps:
-1. Open wsl terminal and cd to ~ .
-2. git clone git@github.com:itayg2341/SWE-agent.git
-3. cd SWE-agent
-4. python3.11 -m venv venv (must python 3.11)
-5. source venv/bin/activate
-6. python -m pip install --upgrade pip && pip install --editable .
-7. deactivate
-8. cd api
-9. python3.11 -m venv venv (must python 3.11)
-10. source venv/bin/activate
-11. pip install flask
-12. python app.py
+1. Make sure you have docker and docker-compose installed.
+2. Clone the repository: `git clone git@github.com:itayg2341/SWE-agent.git`
+3. Navigate to the project directory: `cd SWE-agent`
+4. Build and run the containers: `docker-compose up -d`
 
 13. Open the SWE-agent dir with vscode and make sure the Docker is running.
 14. add .env file and change the dir name "trajectories_example" to "trajectories".
