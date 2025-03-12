@@ -12,6 +12,17 @@ import urllib.error
 app = Flask(__name__)
 
 WEBHOOK_SECRET = '123'
+MODEL = "gemini-1.5-pro"
+
+def run_command(repo_url: str, issue_url: str) -> str:
+    return (
+        "cd ../ && "
+        "source venv/bin/activate && "
+        "sweagent run "
+        "--agent.model.name=gemini/" + MODEL + " " +
+        "--env.repo.github_url=" + repo_url + " " +
+        "--problem_statement.github_url=" + issue_url
+    )
 
 def verify_signature(data, signature):
     """Verify that the request came from GitHub."""
@@ -29,7 +40,7 @@ def extract_repo_and_issue(issue_url: str):
         issue_number = ""
     return repo_base, issue_number
 
-def build_log_file_path(model_name: str, repo_base: str, issue_number: str, repo_path: str) -> str:
+def build_log_file_path(repo_base: str, issue_number: str) -> str:
     """
     Build a generic log file path.
     Example transformation:
@@ -47,7 +58,7 @@ def build_log_file_path(model_name: str, repo_base: str, issue_number: str, repo
     repo_identifier = repo_base.replace("https://github.com/", "").replace("/", "__")
     issue_identifier = f"i{issue_number}"
     log_file_path = (
-        f"{repo_path}/trajectories/root/default__gemini/" + model_name +
+        f"../trajectories/root/default__gemini/" + MODEL +
         "__t-0.00__p-1.00__c-999999.00___" + repo_identifier + "-" + issue_identifier + "/" +
         repo_identifier + "-" + issue_identifier + "/" +
         repo_identifier + "-" + issue_identifier + ".trace.log"
@@ -56,31 +67,21 @@ def build_log_file_path(model_name: str, repo_base: str, issue_number: str, repo
 
 @app.route("/issue/<path:issue_url>", methods=["GET"])
 def issue(issue_url):
-
+    print('solving this issue:', issue_url)
     repo_url, issue_number = extract_repo_and_issue(issue_url)
-    model_name = "gemini-1.5-pro"
-    repo_path = "../"
-    
-    command = (
-        f"cd {repo_path} && "
-        "source venv/bin/activate && "
-        "PYTHONUNBUFFERED=1 script -q -c 'sweagent run "
-        "--agent.model.name=gemini/" + model_name + " " +
-        "--env.repo.github_url=" + repo_url + " " +
-        "--problem_statement.github_url=" + issue_url + "'"
-    )
-    
+
     try:
-        subprocess.run(
-            ["bash", "-c", command],
+        output = subprocess.run(
+            ["bash", "-c", run_command(repo_url, issue_url)],
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace"
         )
 
-        log_file_path = build_log_file_path(model_name, repo_url, issue_number, repo_path)
+        print('output run:', output.stdout)
 
+        log_file_path = build_log_file_path(repo_url, issue_number)
         log_result = subprocess.run(
             ["cat", log_file_path],
             capture_output=True,
@@ -125,71 +126,30 @@ def issue(issue_url):
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    # Extract the signature from the header
+    print('webhook')
     signature = request.headers.get('X-Hub-Signature-256')
     if not signature or not verify_signature(request.data, signature):
         abort(400, 'Invalid signature')
 
     payload = request.get_json()
-
-    # Check if a new issue was opened
     if payload.get("action") == "opened":
-        # Extract the issue URL
         issue_url = payload.get("issue", {}).get("html_url")
         if issue_url:
             print("New issue created at:", issue_url)
             repo_url, _ = extract_repo_and_issue(issue_url)
-            model_name = "gemini-1.5-pro"
-            repo_path = "../"
-            
-            command = (
-                f"cd {repo_path} && "
-                "source venv/bin/activate && "
-                "PYTHONUNBUFFERED=1 script -q -c 'sweagent run "
-                "--agent.model.name=gemini/" + model_name + " " +
-                "--env.repo.github_url=" + repo_url + " " +
-                "--problem_statement.github_url=" + issue_url + "'"
-            )
-            
             try:
-                subprocess.run(
-                    ["bash", "-c", command],
+                output = subprocess.run(
+                    ["bash", "-c", run_command(repo_url, issue_url)],
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
                     errors="replace"
                 )
             except Exception as e:
+                print('error:', e)
                 return jsonify({"status": "error", "message": str(e)}), 500
-
-    # elif (payload.get("action") == "created" or payload.get("action") == "edited") and 'comment' in payload and 'body' in payload['comment'] and 'swerun' in payload['comment']['body']:
-    #     issue_url = payload.get("issue", {}).get("html_url")
-    #     if issue_url:
-    #         repo_url, _ = extract_repo_and_issue(issue_url)
-    #         model_name = "gemini-1.5-pro"
-    #         repo_path = "~/projects/new/SWE-agent"
-            
-    #         command = (
-    #             f"cd {repo_path} && "
-    #             "source venv/bin/activate && "
-    #             "PYTHONUNBUFFERED=1 script -q -c 'sweagent run "
-    #             "--agent.model.name=gemini/" + model_name + " " +
-    #             "--env.repo.github_url=" + repo_url + " " +
-    #             "--problem_statement.github_url=" + issue_url + "'"
-    #         )
-            
-    #         try:
-    #             subprocess.run(
-    #                 ["bash", "-c", command],
-    #                 capture_output=True,
-    #                 text=True,
-    #                 encoding="utf-8",
-    #                 errors="replace"
-    #             )
-    #         except Exception as e:
-    #             return jsonify({"status": "error", "message": str(e)}), 500
 
     return '', 200
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
